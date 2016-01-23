@@ -89,6 +89,7 @@ def playerStandings():
     cursor = database.cursor()
     cursor.execute(query)
 
+    # we are retrieving potentially a number of rows, so fetch them all
     rows = cursor.fetchall()
 
     database.close()
