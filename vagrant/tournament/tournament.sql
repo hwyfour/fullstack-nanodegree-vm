@@ -6,13 +6,6 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
--- clean and recreate the tournament database
-drop if exists tournament;
-create database tournament;
-
--- connect to the new tournament database
-\c tournament;
-
 
 -- a simple player table
 create table players (
