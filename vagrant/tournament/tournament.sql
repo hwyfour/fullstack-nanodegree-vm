@@ -31,3 +31,10 @@ create view wins as
     select players.id, count(matches.winner) as total from players
     left join matches on matches.winner = players.id
     group by players.id;
+
+-- aggregate the player standings, ordered by wins
+create view standings as
+    select players.id, players.name, wins.total as wins, rounds.total as matches from players
+    left join wins on wins.id = players.id
+    left join rounds on rounds.id = players.id
+    order by wins desc;

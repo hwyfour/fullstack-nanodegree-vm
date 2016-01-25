@@ -79,15 +79,8 @@ def playerStandings():
     """
     database = connect()
 
-    query = '''
-        select players.id, players.name, wins.total as wins, rounds.total as matches from players
-        left join wins on wins.id = players.id
-        left join rounds on rounds.id = players.id
-        order by wins desc;
-    '''
-
     cursor = database.cursor()
-    cursor.execute(query)
+    cursor.execute("select * from standings;")
 
     # we are retrieving potentially a number of rows, so fetch them all
     rows = cursor.fetchall()
