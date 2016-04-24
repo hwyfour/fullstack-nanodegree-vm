@@ -6,7 +6,7 @@ import string
 
 from database_setup import Base, User, Category, Item
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, make_response
-from flask import session as login_session
+from flask import session as user_session
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
@@ -28,11 +28,49 @@ engine = create_engine('sqlite:///catalog.db')
 # Map the database schema to the metadata of the Base class so we can use
 # the database objects as classes when creating new objects
 Base.metadata.bind = engine
-DBSession = sessionmaker(bind=engine)
 
 # We initialize a session which acts as a staging environment for any changes to the database.
-# Changes to the session are not committed to the database until we call session.commit()
-session = DBSession()
+# Changes to the session are not committed to the database until we call database_session.commit()
+database_session = sessionmaker(bind=engine)()
+
+
+# HELPER FUNCTIONS ================================================================================
+
+def createUser(user_session):
+    """Create a new user and add him to the database."""
+
+    name = user_session['name']
+    email = user_session['email']
+
+    # Create a new user based on the information passed in from the session information
+    user = User(name=name, email=email)
+
+    # Add the new user to the database session and commit the change
+    database_session.add(user)
+    database_session.commit()
+
+    # Retrieve the new user object as we need to return the ID
+    user = database_session.query(User).filter_by(email=email).one()
+
+    return user.id
+
+
+def getUserByID(user_id):
+    """Return a user given their ID."""
+
+    user = database_session.query(User).filter_by(id=user_id).one()
+
+    return user
+
+
+def getUserIDByEmail(user_email):
+    """Return a user's ID given their email."""
+
+    try:
+        user = database_session.query(User).filter_by(email=user_email).one()
+        return user.id
+    except:
+        return None
 
 
 # ROUTE CONFIGURATION =============================================================================
@@ -42,7 +80,7 @@ def catalogJSON():
     """Return a JSON object describing all categories and their items."""
 
     # Retrieve all the categories from the database
-    categories = session.query(Category).all()
+    categories = database_session.query(Category).all()
 
     # Create a working array so we can add items into the category objects
     categories_collection = []
@@ -52,7 +90,7 @@ def catalogJSON():
         _ = category.serialize
 
         # Retrieve all the items that belong to this particular category
-        items = session.query(Item).filter_by(category_id=category.id).all()
+        items = database_session.query(Item).filter_by(category_id=category.id).all()
 
         # Serialize all the items and add them to the temporary element
         _['items'] = [item.serialize for item in items]
@@ -70,7 +108,7 @@ def showCategories():
     """The home page. Displays all categories."""
 
     # Retrieve all the categories from the database
-    categories = session.query(Category).order_by(asc(Category.name))
+    categories = database_session.query(Category).order_by(asc(Category.name))
 
     # Render the homepage template containing all the categories
     return render_template('index.html', categories=categories)
@@ -88,7 +126,7 @@ def showLogin():
 
     # Generate a session token to avoid CSRF and add it to the login session
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
-    login_session['state'] = state
+    user_session['state'] = state
 
     # Render the login template and pass in the CSRF token
     return render_template('login.html', client_id=client_id, state=state)
