@@ -169,13 +169,18 @@ def newItem(category_name=None):
 
     # If we're in POST, process the form data
     if request.method == 'POST':
+
+        post_category = request.form.get('category')
+        post_name = request.form.get('name')
+        post_description = request.form.get('description')
+
         # Retrieve the category that was selected for use when creating the new item
-        category = database_session.query(Category).filter_by(name=request.form['category']).one()
+        category = database_session.query(Category).filter_by(name=post_category).one()
 
         # Create a new item based on the information passed in from the form data
         item = Item(
-            name = request.form['name'],
-            description = request.form['description'],
+            name = post_name,
+            description = post_description,
             category_id = category.id,
             user_id = user_session.get('user_id')
         )
@@ -229,15 +234,17 @@ def editItem(category_name, item_name):
 
     # If we're in POST, process the form data
     if request.method == 'POST':
+
+        post_category = request.form.get('category')
+        post_name = request.form.get('name')
+        post_description = request.form.get('description')
+
         # Update the item attributes
-        if request.form['name']:
-            item.name = request.form['name']
-        if request.form['description']:
-            item.description = request.form['description']
-        if request.form['category']:
-            new_category_name = request.form['category']
-            new_category = database_session.query(Category).filter_by(name=new_category_name).one()
-            item.category_id = new_category.id
+        item.name = post_name
+        item.description = post_description
+        new_category_name = post_category
+        new_category = database_session.query(Category).filter_by(name=new_category_name).one()
+        item.category_id = new_category.id
 
         database_session.add(item)
         database_session.commit()
@@ -343,7 +350,7 @@ def oauth():
         return generateResponse(result.get('error'), 500)
 
     # Verify that the access token is used for the intended user or abort
-    google_id = credentials.id_token['sub']
+    google_id = credentials.id_token.get('sub')
     if result.get('user_id') != google_id:
         return generateResponse('User ID for token does not match given user ID.', 401)
 
@@ -369,8 +376,8 @@ def oauth():
     data = answer.json()
 
     # Store the name and email of the user in their session data
-    user_session['name'] = data['name']
-    user_session['email'] = data['email']
+    user_session['name'] = data.get('name')
+    user_session['email'] = data.get('email')
 
     # Get an ID for the user and store it in their session data
     user_session['user_id'] = createOrRetrieveUserID(user_session)
