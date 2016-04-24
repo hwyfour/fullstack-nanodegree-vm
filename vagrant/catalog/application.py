@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 # Read the OAuth client ID
 client_id = json.loads(open('client_secret.json', 'r').read())['web']['client_id']
-app_name = "Udacity Project 3"
+app_name = 'Udacity Project 3'
 
 
 # DATABASE CONNECTION =============================================================================
@@ -36,11 +36,18 @@ database_session = sessionmaker(bind=engine)()
 
 # HELPER FUNCTIONS ================================================================================
 
-def createUser(user_session):
+def createOrRetrieveUserID(user_session):
     """Create a new user and add him to the database."""
 
     name = user_session['name']
     email = user_session['email']
+
+    # Try and retrieve a user with the given email or else continue to make a new user
+    try:
+        user = database_session.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        pass
 
     # Create a new user based on the information passed in from the session information
     user = User(name=name, email=email)
@@ -63,14 +70,12 @@ def getUserByID(user_id):
     return user
 
 
-def getUserIDByEmail(user_email):
-    """Return a user's ID given their email."""
+def generateResponse(message, code):
+    """Generate a JSON formatted response."""
 
-    try:
-        user = database_session.query(User).filter_by(email=user_email).one()
-        return user.id
-    except:
-        return None
+    response = make_response(json.dumps(message), code)
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 
 # ROUTE CONFIGURATION =============================================================================
@@ -130,6 +135,72 @@ def showLogin():
 
     # Render the login template and pass in the CSRF token
     return render_template('login.html', client_id=client_id, state=state)
+
+
+@app.route('/oauth', methods=['POST'])
+def oauth():
+    """The OAuth logic. Consumes state data and tries to generate a valid OAuth token."""
+
+    # CSRF validation. If mis-matched, abort
+    if request.args.get('state') != user_session['state']:
+        return generateResponse('Invalid state parameter.', 401)
+
+    # Upgrade the authorization code into a credentials object or abort on error
+    try:
+        oauth_flow = flow_from_clientsecrets('client_secret.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(request.data)
+    except FlowExchangeError:
+        return generateResponse('Failed to upgrade the authorization code.', 401)
+
+    # Get the token information from Google
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    response = requests.get(url)
+    result = response.json()
+
+    # Abort if there was an error passed back within the access token info
+    if result.get('error') is not None:
+        return generateResponse(result.get('error'), 500)
+
+    # Verify that the access token is used for the intended user or abort
+    google_id = credentials.id_token['sub']
+    if result['user_id'] != google_id:
+        return generateResponse('User ID for token does not match given user ID.', 401)
+
+    # Verify that the access token is valid for this app or abort
+    if result['issued_to'] != client_id:
+        return generateResponse('Client ID for token does not match app client ID.', 401)
+
+    # Verify that the user is not already connected
+    existing_access_token = user_session.get('access_token')
+    existing_google_id = user_session.get('google_id')
+
+    # If so, simply respond with a 200
+    if existing_access_token is not None and google_id == existing_google_id:
+        return generateResponse('Current user is already connected.', 200)
+
+    # Save the token and Google ID to enable future user validation as done directly above
+    user_session['access_token'] = access_token
+    user_session['google_id'] = google_id
+
+    # Get the user information from Google
+    parameters = {'access_token': access_token, 'alt': 'json'}
+    answer = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', params=parameters)
+    data = answer.json()
+
+    # Store the name and email of the user in their session data
+    user_session['name'] = data['name']
+    user_session['email'] = data['email']
+
+    # Get an ID for the user and store it in their session data
+    user_session['user_id'] = createOrRetrieveUserID(user_session)
+
+    # We want to alert the user that they logged in successfully, so add a message to the 'flash'
+    flash("You are now logged in as %s" % user_session['name'])
+
+    # Return whatever just so the AJAX call has a successful response
+    return 'Success'
 
 
 if __name__ == '__main__':
