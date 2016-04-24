@@ -16,6 +16,9 @@ from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
+client_id = json.loads(open('client_secret.json', 'r').read())['web']['client_id']
+app_name = "Udacity Project 3"
+
 
 # DATABASE CONNECTION =============================================================================
 
@@ -78,10 +81,17 @@ def showCategory(category_name):
     pass
 
 
-@app.route('/login')
+@app.route('/login/')
 def showLogin():
     """The login page. Displays the login options."""
-    pass
+
+    # Generate a session token to avoid CSRF and add it to the login session
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+
+    # Render the login template and pass in the CSRF token
+    return render_template('login.html', state=state)
+
 
 if __name__ == '__main__':
     app.secret_key = 'guess_this'

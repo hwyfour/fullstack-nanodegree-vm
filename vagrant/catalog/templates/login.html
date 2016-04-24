@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block scripts %}
+
+    <script src="//apis.google.com/js/platform.js?onload=start"></script>
+
+{% endblock %}
+
+{% block content %}
+
+    <div id="signInButton">
+        <span class="g-signin"
+            data-scope="openid email"
+            data-clientid="750940138074-uo5fs8gd3j2nns3d1cqc2mmqj2jb51kn.apps.googleusercontent.com"
+            data-redirecturi="postmessage"
+            data-accesstype="offline"
+            data-cookiepolicy="single_host_origin"
+            data-callback="signIn"
+            data-approvalprompt="force">
+        </span>
+    </div>
+    <div id="result"></div>
+    <script>
+        // Executes when the G+ window disappears and the focus returns to the login page
+        function signIn(result) {
+            // Make a call to our app's OAuth code to finish the authentication
+            $.ajax({
+                type: 'POST',
+                processData: false,
+                data: result['code'],
+                url: '/oauth?state={{state}}',
+                contentType: 'application/octet-stream; charset=utf-8',
+                success: function(result) {
+                    if (result) {
+                        // Authentication was successful, redirect the visitor to the home page
+                        window.location.href = "/";
+                    } else if (result['error']) {
+                        // Authentication was unsuccessful
+                        $('#result').html('Authentication error: ' + result['error']);
+                    } else {
+                        // Our application had an error
+                        $('#result').html('Internal application error.');
+                    }
+                }
+            });
+        }
+    </script>
+
+{% endblock %}
