@@ -38,8 +38,8 @@ database_session = sessionmaker(bind=engine)()
 def createOrRetrieveUserID(user_session):
     """Create a new user and add him to the database."""
 
-    name = user_session['name']
-    email = user_session['email']
+    name = user_session.get('name')
+    email = user_session.get('email')
 
     # Try and retrieve a user with the given email or else continue to make a new user
     try:
@@ -172,7 +172,7 @@ def newItem(category_name=None):
             name = request.form['name'],
             description = request.form['description'],
             category_id = category.id,
-            user_id = user_session['user_id']
+            user_id = user_session.get('user_id')
         )
 
         # Add the new item to the database session and commit the change
@@ -215,7 +215,7 @@ def deleteItem(category_name, item_name):
         category_id = category.id).filter_by(name = item_name).one()
 
     # Alert the user if they are not the owner, as they cannot delete items that are not theirs
-    if user_session['user_id'] != item.user_id:
+    if user_session.get('user_id') != item.user_id:
         # We want to alert the user that the item is not their and cannot be deleted
         flash('Item does not belong to you and therefore cannot be deleted')
 
@@ -262,7 +262,7 @@ def oauth():
     """The OAuth logic. Consumes state data and tries to generate a valid OAuth token."""
 
     # CSRF validation. If mis-matched, abort
-    if request.args.get('state') != user_session['state']:
+    if request.args.get('state') != user_session.get('state'):
         return generateResponse('Invalid state parameter.', 401)
 
     # Upgrade the authorization code into a credentials object or abort on error
@@ -285,11 +285,11 @@ def oauth():
 
     # Verify that the access token is used for the intended user or abort
     google_id = credentials.id_token['sub']
-    if result['user_id'] != google_id:
+    if result.get('user_id') != google_id:
         return generateResponse('User ID for token does not match given user ID.', 401)
 
     # Verify that the access token is valid for this app or abort
-    if result['issued_to'] != client_id:
+    if result.get('issued_to') != client_id:
         return generateResponse('Client ID for token does not match app client ID.', 401)
 
     # Verify that the user is not already connected
@@ -317,7 +317,7 @@ def oauth():
     user_session['user_id'] = createOrRetrieveUserID(user_session)
 
     # We want to alert the user that they logged in successfully, so add a message to the 'flash'
-    flash("You are now logged in as %s" % user_session['name'])
+    flash("You are now logged in as %s" % user_session.get('name'))
 
     # Return whatever just so the AJAX call has a successful response
     return 'Success'
