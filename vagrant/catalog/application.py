@@ -206,6 +206,60 @@ def newItem(category_name=None):
         )
 
 
+@app.route('/catalog/<category_name>/<item_name>/edit/', methods=['GET', 'POST'])
+def editItem(category_name, item_name):
+    """The item editing page."""
+
+    # Redirect the user to login if they are not logged in
+    if 'name' not in user_session:
+        return redirect('/login')
+
+    # Retrieve the item from the database
+    category = database_session.query(Category).filter_by(name=category_name).one()
+    item = database_session.query(Item).filter_by(
+        category_id = category.id).filter_by(name = item_name).one()
+
+    # Alert the user if they are not the owner, as they cannot edit items that are not theirs
+    if user_session.get('user_id') != item.user_id:
+        # We want to alert the user that the item is not theirs and cannot be edited
+        flash('Item does not belong to you and therefore cannot be edited')
+
+        # Return to the main category page that item came from
+        return redirect(url_for('showCategory', category_name=category_name))
+
+    # If we're in POST, process the form data
+    if request.method == 'POST':
+        # Update the item attributes
+        if request.form['name']:
+            item.name = request.form['name']
+        if request.form['description']:
+            item.description = request.form['description']
+        if request.form['category']:
+            new_category_name = request.form['category']
+            new_category = database_session.query(Category).filter_by(name=new_category_name).one()
+            item.category_id = new_category.id
+
+        database_session.add(item)
+        database_session.commit()
+
+        # We want to alert the user that the item was edited, so add a message to the 'flash'
+        flash('Item successfully edited')
+
+        # Return to the main category page that the item came from
+        return redirect(url_for('showCategory', category_name=category_name))
+    # Else we're in GET, so present the editing form instead
+    else:
+        # Retrieve all the categories from the database so we can present them as form options
+        categories = database_session.query(Category).order_by(asc(Category.name))
+
+        return render_template('edititem.html',
+            item = item,
+            categories = categories,
+            category_name = category_name,
+            email = user_session.get('email')
+        )
+
+
 @app.route('/catalog/<category_name>/<item_name>/delete/', methods=['GET', 'POST'])
 def deleteItem(category_name, item_name):
     """The item deletion page."""
@@ -221,7 +275,7 @@ def deleteItem(category_name, item_name):
 
     # Alert the user if they are not the owner, as they cannot delete items that are not theirs
     if user_session.get('user_id') != item.user_id:
-        # We want to alert the user that the item is not their and cannot be deleted
+        # We want to alert the user that the item is not theirs and cannot be deleted
         flash('Item does not belong to you and therefore cannot be deleted')
 
         # Return to the main category page that item came from

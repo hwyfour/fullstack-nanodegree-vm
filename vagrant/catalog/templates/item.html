@@ -11,6 +11,10 @@
             <button class="btn btn-default delete">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Delete</button>
         </a>
+        <a href = '{{url_for('editItem', category_name=category_name, item_name=item.name)}}'>
+            <button class="btn btn-default delete">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Edit</button>
+        </a>
     {% endif %}
 
 {% endblock %}
