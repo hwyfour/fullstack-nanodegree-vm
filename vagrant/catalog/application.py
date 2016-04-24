@@ -131,6 +131,36 @@ def showCategory(category_name):
     return render_template('category.html', items=items, email=user_session.get('email'))
 
 
+@app.route('/catalog/add/', methods=['GET', 'POST'])
+def newItem():
+    """The item creation page."""
+
+    # Redirect the user to login if they are not logged in
+    if 'name' not in user_session:
+        return redirect('/login')
+
+    # If we're in POST, process the form data
+    if request.method == 'POST':
+        # Create a new item based on the information passed in from the form data
+        item = Item(
+            name = request.form['name'],
+            description = request.form['description'],
+            category_id = 1,
+            user_id = user_session['user_id']
+        )
+
+        # Add the new item to the database session and commit the change
+        database_session.add(item)
+        database_session.commit()
+
+        # We want to alert the user that the item was added, so add a message to the 'flash'
+        flash('New Item Successfully Created: %s' % (item.name))
+        return redirect(url_for('showCategories'))
+    # Else we're in GET, so present the form instead
+    else:
+        return render_template('newitem.html', email=user_session.get('email'))
+
+
 @app.route('/login/')
 def showLogin():
     """The login page. Displays the login options."""
