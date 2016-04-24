@@ -27,3 +27,13 @@
 8. Prime the database with some basic information
 
         $ python feedme.py
+
+9. Run the app
+
+        $ python application.py
+
+10. Open your browser to
+
+        http://localhost:8000
+
+11. Enjoy!
