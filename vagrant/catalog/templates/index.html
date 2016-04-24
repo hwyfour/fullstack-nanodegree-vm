@@ -2,12 +2,16 @@
 
 {% block content %}
 
-    {% if email %}
-        <a href="{{url_for('newItem')}}">Add Item</a>
-    {% endif %}
+    <div class="list-group">
+        {% for category in categories %}
+        <a href="{{url_for('showCategory', category_name = category.name)}}" class="list-group-item">
+            <h4 class="list-group-item-heading">{{category.name}}</h4>
+        </a>
+        {% endfor %}
+    </div>
 
-    {% for category in categories %}
-    <a href = "{{url_for('showCategory', category_name = category.name)}}">{{category.name}}</a>
-    {% endfor %}
+    {% if email %}
+        <a href="{{url_for('newItem')}}"><button type="button" class="btn btn-primary">Add Item</button></a>
+    {% endif %}
 
 {% endblock %}

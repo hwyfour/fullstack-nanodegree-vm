@@ -394,7 +394,7 @@ def oauth():
     user_session['user_id'] = createOrRetrieveUserID(user_session)
 
     # We want to alert the user that they logged in successfully, so add a message to the 'flash'
-    flash("You are now logged in as %s" % user_session.get('name'))
+    flash('You are now logged in as %s' % user_session.get('name'))
 
     # Return whatever just so the AJAX call has a successful response
     return 'Success'
@@ -418,8 +418,19 @@ def deauth():
         del user_session['email']
         del user_session['google_id']
         del user_session['name']
+        del user_session['user_id']
 
-        return generateResponse('Successfully disconnected.', 200)
+        # Retrieve all the categories from the database
+        categories = database_session.query(Category).order_by(asc(Category.name))
+
+        # Alert the user that they logged out successfully
+        flash('You are now logged out.')
+
+        # Render the homepage template containing all the categories
+        return render_template('index.html',
+            categories = categories,
+            email = user_session.get('email')
+        )
     else:
         return generateResponse('Failed to revoke token for given user.', 400)
 

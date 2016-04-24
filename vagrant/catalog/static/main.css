@@ -1,0 +1,17 @@
+body {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+form {
+    display: inline;
+}
+
+#signInButton {
+    text-align: center;
+    margin: 0 auto;
+}
