@@ -174,23 +174,28 @@ def newItem(category_name=None):
         post_name = request.form.get('name')
         post_description = request.form.get('description')
 
-        # Retrieve the category that was selected for use when creating the new item
-        category = database_session.query(Category).filter_by(name=post_category).one()
+        # All fields must have a value
+        if (post_category and post_name and post_description):
+            # Retrieve the category that was selected for use when creating the new item
+            category = database_session.query(Category).filter_by(name=post_category).one()
 
-        # Create a new item based on the information passed in from the form data
-        item = Item(
-            name = post_name,
-            description = post_description,
-            category_id = category.id,
-            user_id = user_session.get('user_id')
-        )
+            # Create a new item based on the information passed in from the form data
+            item = Item(
+                name = post_name,
+                description = post_description,
+                category_id = category.id,
+                user_id = user_session.get('user_id')
+            )
 
-        # Add the new item to the database session and commit the change
-        database_session.add(item)
-        database_session.commit()
+            # Add the new item to the database session and commit the change
+            database_session.add(item)
+            database_session.commit()
 
-        # We want to alert the user that the item was added, so add a message to the 'flash'
-        flash('New item successfully created: %s' % (item.name))
+            # We want to alert the user that the item was added, so add a message to the 'flash'
+            flash('New item successfully created: %s' % (item.name))
+        # Or else we simply alert the user to try again
+        else:
+            flash('Please ensure all fields have a value')
 
         # If we were on a category page, redirect back to that
         if category_name is not None:
@@ -239,18 +244,24 @@ def editItem(category_name, item_name):
         post_name = request.form.get('name')
         post_description = request.form.get('description')
 
-        # Update the item attributes
-        item.name = post_name
-        item.description = post_description
-        new_category_name = post_category
-        new_category = database_session.query(Category).filter_by(name=new_category_name).one()
-        item.category_id = new_category.id
+        # All fields must have a value
+        if (post_category and post_name and post_description):
+            # Update the item attributes
+            item.name = post_name
+            item.description = post_description
+            new_category_name = post_category
+            new_category = database_session.query(Category).filter_by(name=new_category_name).one()
+            item.category_id = new_category.id
 
-        database_session.add(item)
-        database_session.commit()
+            # Add the update item back into the database
+            database_session.add(item)
+            database_session.commit()
 
-        # We want to alert the user that the item was edited, so add a message to the 'flash'
-        flash('Item successfully edited')
+            # We want to alert the user that the item was edited, so add a message to the 'flash'
+            flash('Item successfully edited')
+        # Or else we simply alert the user to try again
+        else:
+            flash('Please ensure all fields have a value')
 
         # Return to the main category page that the item came from
         return redirect(url_for('showCategory', category_name=category_name))
