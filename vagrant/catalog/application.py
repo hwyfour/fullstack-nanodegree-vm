@@ -133,12 +133,14 @@ def showCategory(category_name):
     # Render the category template containing all the items
     return render_template('category.html',
         items = items,
+        category_name = category_name,
         email = user_session.get('email')
     )
 
 
 @app.route('/catalog/add/', methods=['GET', 'POST'])
-def newItem():
+@app.route('/catalog/<category_name>/add/', methods=['GET', 'POST'])
+def newItem(category_name=None):
     """The item creation page."""
 
     # Redirect the user to login if they are not logged in
@@ -164,14 +166,22 @@ def newItem():
 
         # We want to alert the user that the item was added, so add a message to the 'flash'
         flash('New Item Successfully Created: %s' % (item.name))
+
+        # If we were on a category page, redirect back to that
+        if category_name is not None:
+            return redirect(url_for('showCategory', category_name=category_name))
+
+        # Otherwise, redirect back to the base page of all categories
         return redirect(url_for('showCategories'))
     # Else we're in GET, so present the creation form instead
     else:
         # Retrieve all the categories from the database so we can present them as form options
         categories = database_session.query(Category).order_by(asc(Category.name))
 
+        # Pass in the category name so if it exists, we can auto-highlight the appropriate category
         return render_template('newitem.html',
             categories = categories,
+            category_name = category_name,
             email = user_session.get('email')
         )
 

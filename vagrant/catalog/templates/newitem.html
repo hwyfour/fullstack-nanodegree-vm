@@ -9,7 +9,9 @@
         <textarea maxlength="1024" rows="3" name="description" placeholder="Description of the item"></textarea>
         <select name="category">
             {% for category in categories %}
-            <option value="{{category.name}}">{{category.name}}</option>
+            <option value="{{category.name}}"
+                {% if category_name == category.name %} selected{% endif %}>{{category.name}}
+            </option>
             {% endfor %}
         </select>
         <button type="submit" id="submit" type="submit">
