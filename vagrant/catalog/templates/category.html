@@ -3,12 +3,12 @@
 {% block content %}
 
     {% if email %}
-        <a href="{{url_for('newItem', category_name=category_name)}}">Add Item</a>
+        <a href="{{url_for('newItem', category_name = category_name)}}">Add Item</a>
     {% endif %}
 
     <ul>
     {% for item in items %}
-        <li>{{item.name}}</li>
+        <li><a href="{{url_for('showItem', category_name = category_name, item_name = item.name)}}">{{item.name}}</a></li>
     {% endfor %}
     </ul>
 

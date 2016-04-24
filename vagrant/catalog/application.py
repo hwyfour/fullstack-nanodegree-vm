@@ -138,6 +138,22 @@ def showCategory(category_name):
     )
 
 
+@app.route('/catalog/<category_name>/<item_name>')
+def showItem(category_name, item_name):
+    """The item page. Displays all the information about a particular item."""
+
+    # Retrieve the item from the database
+    category = database_session.query(Category).filter_by(name=category_name).one()
+    item = database_session.query(Item).filter_by(
+        category_id = category.id).filter_by(name = item_name).one()
+
+    # Render the item template containing all the item information
+    return render_template('item.html',
+        item = item,
+        email = user_session.get('email')
+    )
+
+
 @app.route('/catalog/add/', methods=['GET', 'POST'])
 @app.route('/catalog/<category_name>/add/', methods=['GET', 'POST'])
 def newItem(category_name=None):
