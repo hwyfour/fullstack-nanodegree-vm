@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <a href="{{url_for('showLogin')}}">Login</a>
+
+    {% for category in categories %}
+    <a href = "{{url_for('showCategory', category_name = category.name)}}">{{category.name}}</a>
+    {% endfor %}
+
+{% endblock %}

@@ -60,6 +60,29 @@ def catalogJSON():
     return jsonify(categories=categories_collection)
 
 
+@app.route('/')
+@app.route('/catalog/')
+def showCategories():
+    """The home page. Displays all categories."""
+
+    # Retrieve all the categories from the database
+    categories = session.query(Category).order_by(asc(Category.name))
+
+    # Render the homepage template containing all the categories
+    return render_template('index.html', categories=categories)
+
+
+@app.route('/catalog/<category_name>/')
+def showCategory(category_name):
+    """The category page. Displays all the items within that category."""
+    pass
+
+
+@app.route('/login')
+def showLogin():
+    """The login page. Displays the login options."""
+    pass
+
 if __name__ == '__main__':
     app.secret_key = 'guess_this'
     app.debug = True
