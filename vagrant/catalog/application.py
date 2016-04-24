@@ -16,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 
 app = Flask(__name__)
 
+# Read the OAuth client ID
 client_id = json.loads(open('client_secret.json', 'r').read())['web']['client_id']
 app_name = "Udacity Project 3"
 
@@ -90,7 +91,7 @@ def showLogin():
     login_session['state'] = state
 
     # Render the login template and pass in the CSRF token
-    return render_template('login.html', state=state)
+    return render_template('login.html', client_id=client_id, state=state)
 
 
 if __name__ == '__main__':
