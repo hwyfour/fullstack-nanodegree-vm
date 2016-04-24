@@ -24,12 +24,12 @@ app_name = 'Udacity Project 3'
 
 engine = create_engine('sqlite:///catalog.db')
 
-# Map the database schema to the metadata of the Base class so we can use
+# Map the database schema to the metadata of the Base class to use
 # the database objects as classes when creating new objects
 Base.metadata.bind = engine
 
-# We initialize a session which acts as a staging environment for any changes to the database.
-# Changes to the session are not committed to the database until we call database_session.commit()
+# Initialize a session which acts as a staging environment for any changes to the database.
+# Changes to the session are not committed to the database until database_session.commit()
 database_session = sessionmaker(bind=engine)()
 
 
@@ -86,7 +86,7 @@ def catalogJSON():
     # Retrieve all the categories from the database
     categories = database_session.query(Category).all()
 
-    # Create a working array so we can add items into the category objects
+    # Create a working array so we can augment the category objects with items
     categories_collection = []
 
     for category in categories:
@@ -146,7 +146,7 @@ def showItem(category_name, item_name):
     item = database_session.query(Item).filter_by(
         category_id = category.id).filter_by(name = item_name).one()
 
-    # If we are the owner, trigger a modifier which alters the template presentation
+    # If this user is the owner, set a flag which we use to alter the template presentation
     owner = True if user_session.get('user_id') == item.user_id else False
 
     # Render the item template containing all the item information
@@ -191,7 +191,7 @@ def newItem(category_name=None):
             database_session.add(item)
             database_session.commit()
 
-            # We want to alert the user that the item was added, so add a message to the 'flash'
+            # Set an alert to the user that the item was added
             flash('New item successfully created: %s' % (item.name))
         # Or else we simply alert the user to try again
         else:
@@ -257,7 +257,7 @@ def editItem(category_name, item_name):
             database_session.add(item)
             database_session.commit()
 
-            # We want to alert the user that the item was edited, so add a message to the 'flash'
+            # Set an alert to the user that the item was edited
             flash('Item successfully edited')
         # Or else we simply alert the user to try again
         else:
@@ -305,7 +305,7 @@ def deleteItem(category_name, item_name):
         database_session.delete(item)
         database_session.commit()
 
-        # We want to alert the user that the item was deleted, so add a message to the 'flash'
+        # Set an alert to the user that the item was deleted
         flash('Item successfully deleted')
 
         # Return to the main category page that the item came from
