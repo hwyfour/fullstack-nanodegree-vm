@@ -116,7 +116,7 @@ def showCategories():
     categories = database_session.query(Category).order_by(asc(Category.name))
 
     # Render the homepage template containing all the categories
-    return render_template('index.html', categories=categories)
+    return render_template('index.html', categories=categories, email=user_session.get('email'))
 
 
 @app.route('/catalog/<category_name>/')
@@ -155,7 +155,7 @@ def oauth():
 
     # Get the token information from Google
     access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = 'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token
     response = requests.get(url)
     result = response.json()
 
@@ -201,6 +201,30 @@ def oauth():
 
     # Return whatever just so the AJAX call has a successful response
     return 'Success'
+
+
+@app.route('/deauth')
+def deauth():
+    """The De-authorize logic. Logs an active user out and removes their session information."""
+
+    # Only deauthorize a user who is currently logged in
+    access_token = user_session.get('access_token')
+    if access_token is None:
+        return generateResponse('Current user not logged in.', 401)
+
+    # Send the deauthorization request to Google
+    response = requests.get('https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token)
+
+    # If successful (200), delete the user's session information, effectively logging them out
+    if response.status_code == 200:
+        del user_session['access_token']
+        del user_session['email']
+        del user_session['google_id']
+        del user_session['name']
+
+        return generateResponse('Successfully disconnected.', 200)
+    else:
+        return generateResponse('Failed to revoke token for given user.', 400)
 
 
 if __name__ == '__main__':
