@@ -146,9 +146,14 @@ def showItem(category_name, item_name):
     item = database_session.query(Item).filter_by(
         category_id = category.id).filter_by(name = item_name).one()
 
+    # If we are the owner, trigger a modifier which alters the template presentation
+    owner = True if user_session.get('user_id') == item.user_id else False
+
     # Render the item template containing all the item information
     return render_template('item.html',
         item = item,
+        category_name = category_name,
+        owner = owner,
         email = user_session.get('email')
     )
 

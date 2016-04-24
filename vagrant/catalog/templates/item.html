@@ -6,5 +6,11 @@
         <li>{{item.name}}</li>
         <li>{{item.description}}</li>
     </ul>
+    {% if owner %}
+        <a href = '{{url_for('deleteItem', category_name=category_name, item_name=item.name)}}'>
+            <button class="btn btn-default delete">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>Delete</button>
+        </a>
+    {% endif %}
 
 {% endblock %}
