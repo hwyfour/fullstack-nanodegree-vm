@@ -122,7 +122,13 @@ def showCategories():
 @app.route('/catalog/<category_name>/')
 def showCategory(category_name):
     """The category page. Displays all the items within that category."""
-    pass
+
+    # Retrieve all the items for this category from the database
+    category = database_session.query(Category).filter_by(name=category_name).one()
+    items = database_session.query(Item).filter_by(category_id=category.id).all()
+
+    # Render the category template containing all the items
+    return render_template('category.html', items=items, email=user_session.get('email'))
 
 
 @app.route('/login/')

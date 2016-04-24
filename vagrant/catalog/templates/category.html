@@ -6,8 +6,10 @@
         <a href="{{url_for('newItem')}}">Add Item</a>
     {% endif %}
 
-    {% for category in categories %}
-    <a href = "{{url_for('showCategory', category_name = category.name)}}">{{category.name}}</a>
+    <ul>
+    {% for item in items %}
+        <li>{{item.name}}</li>
     {% endfor %}
+    </ul>
 
 {% endblock %}
