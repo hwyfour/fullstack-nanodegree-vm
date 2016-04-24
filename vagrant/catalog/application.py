@@ -116,7 +116,10 @@ def showCategories():
     categories = database_session.query(Category).order_by(asc(Category.name))
 
     # Render the homepage template containing all the categories
-    return render_template('index.html', categories=categories, email=user_session.get('email'))
+    return render_template('index.html',
+        categories = categories,
+        email = user_session.get('email')
+    )
 
 
 @app.route('/catalog/<category_name>/')
@@ -128,7 +131,10 @@ def showCategory(category_name):
     items = database_session.query(Item).filter_by(category_id=category.id).all()
 
     # Render the category template containing all the items
-    return render_template('category.html', items=items, email=user_session.get('email'))
+    return render_template('category.html',
+        items = items,
+        email = user_session.get('email')
+    )
 
 
 @app.route('/catalog/add/', methods=['GET', 'POST'])
@@ -141,11 +147,14 @@ def newItem():
 
     # If we're in POST, process the form data
     if request.method == 'POST':
+        # Retrieve the category that was selected for use when creating the new item
+        category = database_session.query(Category).filter_by(name=request.form['category']).one()
+
         # Create a new item based on the information passed in from the form data
         item = Item(
             name = request.form['name'],
             description = request.form['description'],
-            category_id = 1,
+            category_id = category.id,
             user_id = user_session['user_id']
         )
 
@@ -156,9 +165,15 @@ def newItem():
         # We want to alert the user that the item was added, so add a message to the 'flash'
         flash('New Item Successfully Created: %s' % (item.name))
         return redirect(url_for('showCategories'))
-    # Else we're in GET, so present the form instead
+    # Else we're in GET, so present the creation form instead
     else:
-        return render_template('newitem.html', email=user_session.get('email'))
+        # Retrieve all the categories from the database so we can present them as form options
+        categories = database_session.query(Category).order_by(asc(Category.name))
+
+        return render_template('newitem.html',
+            categories = categories,
+            email = user_session.get('email')
+        )
 
 
 @app.route('/login/')
@@ -170,7 +185,10 @@ def showLogin():
     user_session['state'] = state
 
     # Render the login template and pass in the CSRF token
-    return render_template('login.html', client_id=client_id, state=state)
+    return render_template('login.html',
+        client_id = client_id,
+        state = state
+    )
 
 
 @app.route('/oauth', methods=['POST'])
