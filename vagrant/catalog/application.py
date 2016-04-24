@@ -1,4 +1,3 @@
-import httplib2
 import json
 import random
 import requests
@@ -181,7 +180,7 @@ def newItem(category_name=None):
         database_session.commit()
 
         # We want to alert the user that the item was added, so add a message to the 'flash'
-        flash('New Item Successfully Created: %s' % (item.name))
+        flash('New item successfully created: %s' % (item.name))
 
         # If we were on a category page, redirect back to that
         if category_name is not None:
@@ -194,9 +193,50 @@ def newItem(category_name=None):
         # Retrieve all the categories from the database so we can present them as form options
         categories = database_session.query(Category).order_by(asc(Category.name))
 
-        # Pass in the category name so if it exists, we can auto-highlight the appropriate category
+        # Pass in the category name if it exists, so we can auto-highlight the appropriate category
         return render_template('newitem.html',
             categories = categories,
+            category_name = category_name,
+            email = user_session.get('email')
+        )
+
+
+@app.route('/catalog/<category_name>/<item_name>/delete/', methods=['GET', 'POST'])
+def deleteItem(category_name, item_name):
+    """The item deletion page."""
+
+    # Redirect the user to login if they are not logged in
+    if 'name' not in user_session:
+        return redirect('/login')
+
+    # Retrieve the item from the database
+    category = database_session.query(Category).filter_by(name=category_name).one()
+    item = database_session.query(Item).filter_by(
+        category_id = category.id).filter_by(name = item_name).one()
+
+    # Alert the user if they are not the owner, as they cannot delete items that are not theirs
+    if user_session['user_id'] != item.user_id:
+        # We want to alert the user that the item is not their and cannot be deleted
+        flash('Item does not belong to you and therefore cannot be deleted')
+
+        # Return to the main category page that item came from
+        return redirect(url_for('showCategory', category_name=category_name))
+
+    # If we're in POST, process the form data
+    if request.method == 'POST':
+        # Remove the item from the database
+        database_session.delete(item)
+        database_session.commit()
+
+        # We want to alert the user that the item was deleted, so add a message to the 'flash'
+        flash('Item successfully deleted')
+
+        # Return to the main category page that the item came from
+        return redirect(url_for('showCategory', category_name=category_name))
+    # Else we're in GET, so present the deletion form instead
+    else:
+        return render_template('deleteitem.html',
+            item = item,
             category_name = category_name,
             email = user_session.get('email')
         )
