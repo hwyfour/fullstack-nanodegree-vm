@@ -400,14 +400,18 @@ def oauth():
     return 'Success'
 
 
-@app.route('/deauth')
+@app.route('/deauth/')
 def deauth():
     """The De-authorize logic. Logs an active user out and removes their session information."""
 
     # Only deauthorize a user who is currently logged in
     access_token = user_session.get('access_token')
     if access_token is None:
-        return generateResponse('Current user not logged in.', 401)
+        # Alert the user that they are not currently logged in
+        flash('You are not logged in.')
+
+        # Redirect to the homepage
+        return redirect(url_for('showCategories'))
 
     # Send the deauthorization request to Google
     response = requests.get('https://accounts.google.com/o/oauth2/revoke?token=%s' % access_token)
@@ -426,13 +430,14 @@ def deauth():
         # Alert the user that they logged out successfully
         flash('You are now logged out.')
 
-        # Render the homepage template containing all the categories
-        return render_template('index.html',
-            categories = categories,
-            email = user_session.get('email')
-        )
+        # Redirect to the homepage
+        return redirect(url_for('showCategories'))
     else:
-        return generateResponse('Failed to revoke token for given user.', 400)
+        # Alert the user that the token revocation failed
+        flash('Failed to revoke token for given user.')
+
+        # Redirect to the homepage
+        return redirect(url_for('showCategories'))
 
 
 if __name__ == '__main__':
