@@ -440,7 +440,24 @@ def deauth():
         return redirect(url_for('showCategories'))
 
 
+@app.errorhandler(404)
+def pageNotFound(e):
+    # Alert the user that the page cannot be found
+    flash('Page not found', 'danger')
+
+    # Redirect to the homepage
+    return redirect(url_for('showCategories'))
+
+
+@app.errorhandler(500)
+def serverError(e):
+    # Alert the user that the server had an error
+    flash('Server error', 'danger')
+
+    # Redirect to the homepage
+    return redirect(url_for('showCategories'))
+
+
 if __name__ == '__main__':
     app.secret_key = 'guess_this'
-    app.debug = True
     app.run(host='0.0.0.0', port=8000)
