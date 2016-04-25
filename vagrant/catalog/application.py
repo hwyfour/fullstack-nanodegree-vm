@@ -192,10 +192,10 @@ def newItem(category_name=None):
             database_session.commit()
 
             # Set an alert to the user that the item was added
-            flash('New item successfully created: %s' % (item.name))
+            flash('New item successfully created: %s' % (item.name), 'success')
         # Or else we simply alert the user to try again
         else:
-            flash('Please ensure all fields have a value')
+            flash('Please ensure all fields have a value', 'danger')
 
         # If we were on a category page, redirect back to that
         if category_name is not None:
@@ -232,7 +232,7 @@ def editItem(category_name, item_name):
     # Alert the user if they are not the owner, as they cannot edit items that are not theirs
     if user_session.get('user_id') != item.user_id:
         # We want to alert the user that the item is not theirs and cannot be edited
-        flash('Item does not belong to you and therefore cannot be edited')
+        flash('Item does not belong to you and therefore cannot be edited', 'danger')
 
         # Return to the main category page that item came from
         return redirect(url_for('showCategory', category_name=category_name))
@@ -258,10 +258,10 @@ def editItem(category_name, item_name):
             database_session.commit()
 
             # Set an alert to the user that the item was edited
-            flash('Item successfully edited')
+            flash('Item successfully edited', 'success')
         # Or else we simply alert the user to try again
         else:
-            flash('Please ensure all fields have a value')
+            flash('Please ensure all fields have a value', 'danger')
 
         # Return to the main category page that the item came from
         return redirect(url_for('showCategory', category_name=category_name))
@@ -294,7 +294,7 @@ def deleteItem(category_name, item_name):
     # Alert the user if they are not the owner, as they cannot delete items that are not theirs
     if user_session.get('user_id') != item.user_id:
         # We want to alert the user that the item is not theirs and cannot be deleted
-        flash('Item does not belong to you and therefore cannot be deleted')
+        flash('Item does not belong to you and therefore cannot be deleted', 'danger')
 
         # Return to the main category page that item came from
         return redirect(url_for('showCategory', category_name=category_name))
@@ -306,7 +306,7 @@ def deleteItem(category_name, item_name):
         database_session.commit()
 
         # Set an alert to the user that the item was deleted
-        flash('Item successfully deleted')
+        flash('Item successfully deleted', 'success')
 
         # Return to the main category page that the item came from
         return redirect(url_for('showCategory', category_name=category_name))
@@ -394,7 +394,7 @@ def oauth():
     user_session['user_id'] = createOrRetrieveUserID(user_session)
 
     # We want to alert the user that they logged in successfully, so add a message to the 'flash'
-    flash('You are now logged in as %s' % user_session.get('name'))
+    flash('You are now logged in as %s' % user_session.get('name'), 'info')
 
     # Return whatever just so the AJAX call has a successful response
     return 'Success'
@@ -408,7 +408,7 @@ def deauth():
     access_token = user_session.get('access_token')
     if access_token is None:
         # Alert the user that they are not currently logged in
-        flash('You are not logged in.')
+        flash('You are not logged in', 'info')
 
         # Redirect to the homepage
         return redirect(url_for('showCategories'))
@@ -428,13 +428,13 @@ def deauth():
         categories = database_session.query(Category).order_by(asc(Category.name))
 
         # Alert the user that they logged out successfully
-        flash('You are now logged out.')
+        flash('You are now logged out', 'info')
 
         # Redirect to the homepage
         return redirect(url_for('showCategories'))
     else:
         # Alert the user that the token revocation failed
-        flash('Failed to revoke token for given user.')
+        flash('Failed to revoke token for given user', 'danger')
 
         # Redirect to the homepage
         return redirect(url_for('showCategories'))
